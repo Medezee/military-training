@@ -5,13 +5,14 @@ import math
 #initialize the program
 pygame.init()
 
-display_width = 950
-display_height = 600
+display_width = 890
+display_height = 740
 
 white = (255,255,255)
-grey = (200,200,200)
+grey = (100,100,100)
 light_grey = (230,230,230)
 black = (50,50,50)
+dark = (0,0,0)
 red = (229,57,90)
 dark_red = (202,51,80)
 green = (188,213,128)
@@ -20,17 +21,18 @@ yellow = (255,199,48)
 dark_yellow = (232,187,66)
 blue = (38,207,255)
 dark_blue = (37,170,226)
+purple = (168,1,202)
 
 gameDisplay = pygame.display.set_mode((display_width, display_height))
 
-bgImg = pygame.image.load('background.png')
-bgImg_scaled = pygame.transform.scale(bgImg, (800, 600))
+bgImg = pygame.image.load('background_1.png')
+bgImg_scaled = pygame.transform.scale(bgImg, (720, 720))
 
 mmImg = pygame.image.load('main_menu.png')
-mmImg_scaled = pygame.transform.scale(mmImg, (950, 600))
+mmImg_scaled = pygame.transform.scale(mmImg, (890, 740))
 
 manImg = pygame.image.load('instructions.png')
-manImg_scaled = pygame.transform.scale(manImg, (950, 600))
+manImg_scaled = pygame.transform.scale(manImg, (890, 740))
 
 planeImg = pygame.image.load('plane.png')
 
@@ -38,11 +40,12 @@ pygame.display.set_caption('YOU MUST TRAIN!')
 
 font = pygame.font.SysFont("calibri.ttf", 30)
 font_small = pygame.font.SysFont("calibri.ttf", 20)
+font_little = pygame.font.SysFont("calibri.ttf", 5)
 
-plane_x = random.randrange(10,785)
-plane_y = random.randrange(5,600)
 
-clock = pygame.time.Clock()
+plane_x = random.randrange(30,725)
+plane_y = random.randrange(25,730)
+
 def main_menu(x,y):
     gameDisplay.blit(mmImg_scaled, (x,y))
 
@@ -68,21 +71,21 @@ def new_level():
 
     global plane_x, plane_y
 
-    plane_x = random.randrange(10,785)
-    plane_y = random.randrange(5,600)
- 
+    plane_x = random.randrange(30,725)
+    plane_y = random.randrange(25,730)
+
 def time(sec, mints):
     font = pygame.font.SysFont("calibri.ttf", 30)
     displaytext = "%s:%s" % (mints, sec)
     text = font.render("Time : " +str(displaytext), True, black)
-    gameDisplay.blit(text, (820,80))
+    gameDisplay.blit(text, (760,80))
 
 def time_seg(sec, mints):
     font = pygame.font.SysFont("calibri.ttf", 30)
     displaytext = "%s:%s" % (mints, sec)
     text = font.render("Segm : " +str(displaytext), True, black)
-    gameDisplay.blit(text, (820,110))
-    
+    gameDisplay.blit(text, (760,110))
+
 def text_objects(text, font, color):
     textSurface = font.render(text, True, color)
     return textSurface, textSurface.get_rect()
@@ -90,15 +93,35 @@ def text_objects(text, font, color):
 def scoreboard(x,y,w,h,color):
     pygame.draw.rect(gameDisplay, color, [x,y,w,h])
 
+def colums(index):
+    text = font_small.render(chr(65+index), True, black)
+    gameDisplay.blit(text, (5, 40 + 60 * index))
+
+def rows(index):
+    text = font_small.render(str(index+1), True, black)
+    gameDisplay.blit(text, (40 + 60 * index, 5))
+
+def location(x,y):
+    for i in range (12):
+        for j in range (12):
+            rect_x_start = 20 + j*60
+            rect_x_end = 20 + (j + 1)*60
+            rect_y_start = 20 + i*60
+            rect_y_end = 20 + (i + 1)*60
+            if rect_x_start < x < rect_x_end and rect_y_start < y < rect_y_end:
+                text = font_small.render("Location: " + chr(65+i) + str(j+1), True, black)
+                gameDisplay.blit(text, (760,150))
+                break
+
 def score(count):
     font = pygame.font.SysFont("calibri.ttf", 30)
     text = font.render("Score : " +str(count), True, black)
-    gameDisplay.blit(text, (820,20))
+    gameDisplay.blit(text, (760,20))
 
 def misses(count):
     font = pygame.font.SysFont("calibri.ttf", 30)
     text = font.render("Misses : " +str(count), True, black)
-    gameDisplay.blit(text, (820,50))
+    gameDisplay.blit(text, (760,50))
 
 def start_button(x,y,w,h):
     mouse = pygame.mouse.get_pos()
@@ -178,16 +201,17 @@ def game_main():
                 quit()
 
         main_menu(0,0)
-        start_button(200,510,80,60)
-        instruction_button(425,525,80,60)
-        quit_button(650,510,80,60)
+        start_button(170,640,80,60)
+        instruction_button(395,650,80,60)
+        quit_button(620,640,80,60)
 
         pygame.display.update()
         
 def game_loop():
+    clock = pygame.time.Clock()
 
     score_c = 0
-    misses_c =0
+    misses_c = -1
     timer_s = 0
     timer_m = 0
     timer_seg = 0
@@ -195,14 +219,17 @@ def game_loop():
     
     plane_w = 20
     plane_h = 15
-    
+
     gameExit = False
         
     while not gameExit:
         mouse = pygame.mouse.get_pos()
         click = pygame.mouse.get_pressed()
 
-        scoreboard(800,0,150,display_height, grey)
+        plane_center_x = plane_x + (plane_w / 2)
+        plane_center_y = plane_y + (plane_h / 2)
+
+        scoreboard(740,0,150,display_height, grey)
         score(score_c)
         misses(misses_c)
 
@@ -217,15 +244,24 @@ def game_loop():
 
         display_timer_seg = math.trunc(timer_seg)
         if display_timer_seg == 60:
-            timer_s = 0
+            timer_seg = 0
             timer_m_seg += 1
         
-        bg(0,0)
+        bg(20,20)
         plane(plane_x, plane_y)
         time(display_timer_s, timer_m)
         time_seg(display_timer_seg,timer_m_seg)
+        location(plane_center_x, plane_center_y)
+
+        pygame.draw.rect(gameDisplay, grey, [0,0,20,display_height])
+        pygame.draw.rect(gameDisplay, grey, [0,0,display_width,20])
+
+        for i in range (12):
+            colums(i)
+            rows(i)
+
         pygame.display.update()
-        
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -239,11 +275,10 @@ def game_loop():
                     new_level()
                     timer_m_seg = 0
                     timer_seg = 0
-            elif 0 < mouse[0] < 800 and 0 < mouse[1] < 600:
-                if click[0] == 1:
+            elif 20 < mouse[0] < 740 and 20 < mouse[1] < 740:
+                if event.type == pygame.MOUSEBUTTONUP:
                     misses_c += 1
                     
 game_main()
-#game_loop()
 pygame.quit()
 quit()
